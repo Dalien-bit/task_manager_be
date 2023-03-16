@@ -31,6 +31,9 @@ app.use(cors())
 app.use(xss())
 
 
+app.get('/', (req, res) => {
+	res.send('Site seems fine')
+})
 
 // routes
 app.use('/api/v1/auth', auth)
