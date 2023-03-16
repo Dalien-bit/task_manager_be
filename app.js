@@ -1,33 +1,52 @@
 const express = require('express')
 const app = express()
+// routes
 const tasks = require('./routes/tasks')
+const categories = require('./routes/category')
+const auth = require('./routes/auth')
+// authenticate
+const authenticateUser = require('./middleware/authentication')
+// db
 const connectDB = require('./db/connect')
-require('dotenv').config() 
+// .env file access
+require('dotenv').config()
+// error middle wares
+const notFound = require('./middleware/notFound')
+const errorHandlerMiddleware = require('./middleware/error-handler')
+// extra security packages
+const helmet = require('helmet')
+const cors = require('cors')
+const xss = require('xss-clean')
+const rateLimit = require('express-rate-limit')
 
+app.set('trust proxy', 1)
 // middleware
+app.use(rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 100
+}))
 app.use(express.json())
+app.use(helmet())
+app.use(cors())
+app.use(xss())
 
 
 
 // routes
-app.get('/hello', (req, res) => {
-	res.send('hello');
-})
+app.use('/api/v1/auth', auth)
+app.use('/api/v1/tasks', authenticateUser, tasks)
+app.use('/api/v1/categories', authenticateUser, categories)
 
-app.use('/api/v1/tasks', tasks)
-
-// app.get('/api/v1/tasks')           - get all tasks
-// app.post('/api/v1/tasks')          - create a new task
-// app.get('/api/v1/tasks/:id')       - get a specific task
-// app.patch('/api/v1/tasks/:id')     - update a task
-// app.delete('api/v1/tasks/:id')     - delete a task
+// middleware
+app.use(notFound)
+app.use(errorHandlerMiddleware)
 
 const port = process.env.PORT || 5000
 
 const start = async () => {
 	try {
 		await connectDB(process.env.MONGO_URI);
-		app.listen(port, console.log(`server is listening on ${port}...`))
+		app.listen(port, console.log(`server is listening on ${port}... at ${Date.now()}`))
 	} catch (error) {
 		console.log(error)
 	}
