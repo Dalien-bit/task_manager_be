@@ -1,6 +1,11 @@
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
-const { UnauthenticatedError } = require('../errors')
+const {
+	UnauthenticatedError
+} = require('../errors')
+const {
+	createCustomError
+} = require('../errors/custom-error')
 
 
 const auth = async (req, res, next) => {
@@ -17,7 +22,7 @@ const auth = async (req, res, next) => {
 		}
 		next()
 	} catch (error) {
-		throw new UnauthenticatedError('Authentication invalid')
+		return next(createCustomError(`Some error`, 400))
 	}
 }
 

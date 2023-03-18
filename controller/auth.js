@@ -3,10 +3,8 @@ const {
 	StatusCodes
 } = require('http-status-codes')
 const {
-	BadRequestError,
-	UnauthenticatedError
-} = require('../errors')
-
+	createCustomError
+} = require('../errors/custom-error')
 const register = async (req, res) => {
 	const user = await User.create({
 		...req.body
@@ -20,13 +18,13 @@ const register = async (req, res) => {
 	})
 }
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
 	const {
 		email,
 		password
 	} = req.body
 	if (!email || !password) {
-		throw new BadRequestError('Please provide email and password')
+		return next(createCustomError(`Some error`, 400))
 	}
 	const user = await User.findOne({
 		email
@@ -36,7 +34,7 @@ const login = async (req, res) => {
 	}
 	const isPasswordCorrect = await user.comparePassword(password)
 	if (!isPasswordCorrect) {
-		throw new UnauthenticatedError('Invalid password')
+		return next(createCustomError(`Some error`, 400))
 	}
 	const token = user.createJWT()
 	res.status(StatusCodes.OK).json({
